@@ -15,6 +15,7 @@
 #define REGION_H
 
 #include <vector>
+#include <random>
 
 #include "fccl/point.h"
 #include "fccl/rate.h"
@@ -24,97 +25,95 @@
 template <size_t N>
 class region {
 	public:
-		region() = default;
-		region(const point &pp) : bb(belt<N>(pp)) {};
+		region() : gen(std::random_device()()) { };
+		template <typename RNG>
+		region(RNG rng) : gen(rng) { };
+		//region() = default;
+		//region(const point &pp) : bb(belt<N>(pp)) {};
 
 		// set the start point in a variadic way
 		// this will overwrite the existing belt
-		template<typename... Args>
-		void start(Args... args) {
-			bb = belt<N>(args...);
-		}
+		//template<typename... Args>
+		//void start(Args... args) {
+		//	bb = belt<N>(args...);
+		//}
 
-		void start(const point &pp) {
-			bb = belt<N>(pp);
-		}
+		//void start(const point &pp) {
+		//	bb = belt<N>(pp);
+		//}
 
 		// routine will exapand belt until CL is reached
 		template<typename... Args, typename F = double>
-		belt<N> & expand(F CL, Args... args) {
-			std::vector<rate> rr { { args...} };
+		belt<N> expand(F CL, Args... args) {
+			std::vector<rate> rr { args... };
 			return expand(CL, rr);
 		}
 
 		template<typename F = double>
-		belt<N> & expand(F CL, const std::vector<rate> &rr) {
-			auto points = bb.points();
-			if (points.size() == 0) // empty belt
-				throw std::logic_error("belt is not initialized with a start point");
-			if (points.size() > 1) // belt not fresh
-				throw std::logic_error("belt does not contain only the start point");
+		belt<N> expand(F CL, const std::vector<rate> &rr) {
+			if (rr.size() != N)
+				throw std::invalid_argument("rates not compatible with this region");
+			if (CL >= 1.0)
+				throw std::invalid_argument("CL cannot be greater than 1");
 
-			double best = prob(points.front(), rr);
+			// initialize start point
+			point start(rr.size());
+			std::transform(rr.begin(), rr.end(), start.begin(),
+					[](rate r0) { return size_t(std::round(r0.sig + r0.bak)); } );
+			belt<N> bb(start);
+
+			double best = prob(start, rr);
 			double sum = 1.;	 // only sum after the peak was reached
 
 			while (sum < CL / best) {
 
 				// next point with minimum likelihood
-				point pp = next(rr);
-				sum += part(points.front(), pp, rr);
+				std::vector<point> points = bb.closest();
+#ifdef DEBUG
+				std::cout << "closest points\n";
+				for (const auto &pp : points)
+					std::cout << "\t" << pp;
+				std::cout << "\n\n";
+#endif
+				point pp = next(points.begin(), points.end(), rr, start);
+
+				sum += part(start, pp, rr);
+
+				bb.add(pp);
 			}
 
 			return bb;
 		}
 
-		point next(const std::vector<rate> &rr) {
+		// return a vector of points to break any tie wit random choice
+		point next(std::vector<point>::iterator first, std::vector<point>::iterator last,
+			   const std::vector<rate> &rr, const point &ss) {
 			if (rr.size() != N)
 				throw std::invalid_argument("rates not compatible with this region");
-			std::vector<point> points = bb.closest();
-			std::vector<point>::iterator ip = points.begin(), imin = ip;
+			std::vector<point>::iterator imin = first;
+			std::vector<point> pmins = {*first};
 
-			double min_val = hood(*ip, rr);
-			++ip;
-			for (; ip != points.end(); ++ip) {
-				if (hood(*ip, rr) < min_val) {
-					min_val = hood(*ip, rr);
-					imin = ip;
+			double min_val = hood(*first++, rr);
+			for (; first != last; ++first) {
+				double val = hood(*first, rr);
+				if (val < min_val) {
+					min_val = val;
+					pmins = {*first};
 				}
+				else if (val == min_val)
+					pmins.push_back(*first);
 			}
 
-			// expand belt
-			bb.add(*imin);
+			if (pmins.size() == 1)
+				return pmins[0];
 
-			return *imin;
+			std::uniform_int_distribution<int> dis(0, pmins.size()-1);
+			int pick = dis(gen);
+			return pmins[dis(gen)];
 		}
-
-		/*
-		std::vector<double> reject(const std::vector<double> &bak) {
-			if (bak.size() != N)
-				throw std::invalid_argument("background not compatible with this region");
-			std::vector<rate> rr;
-			rr.reserve(bak.size());
-			for (const auto & b : bak)
-				rr.emplace_back(sqrt(b), b);
-			// starting point
-			point sp(bak.begin(), bak.end());
-			start(sp);	// <- set starting point
-			while (bb.contains(sp)) {
-				sig += 0.01;
-				point pp = {size_t(std::round(bak + sig))};
-				rate rr(sig, bak);
-
-				reg.start(pp);
-				myb = reg.expand(0.99, rr);
-
-				// when background is not in belt anymore
-				// this loop will end
-			}
-
-		}
-		*/
 
 		// computes poissonian probability of the full point
-		double prob(const point &pp, const std::vector<rate> &rr) {
+		double prob(const point &pp, const std::vector<rate> &rr) const {
 			if (rr.size() != pp.size())
 				throw std::invalid_argument("rates not compatible with this point");
 
@@ -129,7 +128,7 @@ class region {
 		}
 
 		// computes partial poissonian probability of the full point
-		double part(const point &p0, const point &pp, const std::vector<rate> &rr) {
+		double part(const point &p0, const point &pp, const std::vector<rate> &rr) const {
 			if (rr.size() != pp.size())
 				throw std::invalid_argument("rates not compatible with this point");
 
@@ -144,7 +143,7 @@ class region {
 		}
 
 		// computes the log-likelihood ratio of the full point
-		double hood(const point &pp, const std::vector<rate> &rr) {
+		double hood(const point &pp, const std::vector<rate> &rr) const {
 			if (rr.size() != pp.size())
 				throw std::invalid_argument("rates not compatible with this point");
 
@@ -159,7 +158,7 @@ class region {
 		}
 
 	private:
-		belt<N> bb;
+		std::mt19937 gen;
 };
 
 #endif
