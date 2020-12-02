@@ -1,13 +1,10 @@
-# Feldman Cousins confidence belt constructor
+# fccl - Feldman Cousins Confidence Levels constructor
 
-This project provides header libraries to build multidimensional confidence level regions using the
-(Feldman Cousins approach ([arXiv:physics/9711021](https://arxiv.org/abs/physics/9711021)).
+This project provides header libraries to build multidimensional confidence level regions using the Feldman Cousins approach ([arXiv:physics/9711021](https://arxiv.org/abs/physics/9711021)).
 
-Each dimension corresponds to a discovery channel, as multiple conditions may be required to be true
-in order to determine special events.
+Each dimension corresponds to a discovery channel, as multiple conditions may be required to be true in order to determine special events.
 The confidence belt is implemented as a recursive templated object.
-Thanks to metaprogramming, N nested vectors are created at compile time, where N is the required
-number of channels.
+Thanks to metaprogramming, N nested vectors are created at compile time, where N is the desired number of channels.
 
 ## Requirements
 
