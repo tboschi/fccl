@@ -70,10 +70,12 @@ class region {
 				// next point with minimum likelihood
 				std::vector<point> points = bb.closest();
 #ifdef DEBUG
+				/*
 				std::cout << "closest points\n";
 				for (const auto &pp : points)
 					std::cout << "\t" << pp;
 				std::cout << "\n\n";
+				*/
 #endif
 				point pp = next(points.begin(), points.end(), rr, start);
 

@@ -8,6 +8,11 @@ int main(int argc, char** argv) {
 
 	region<2> dirac, major;
 
+	if (argc < 2) {
+		std::cerr << "Missing mandatory argument\n";
+		return 1;
+	}
+
 	double bak = std::atof(argv[1]);
 	double sig = sqrt(bak);
 
@@ -21,11 +26,11 @@ int main(int argc, char** argv) {
 	int index = 0;
 	for (double sig = 1; sig < 100; ++sig)
 	{
-		rate LNC_dirac(sig, bak);
-		rate LNV_dirac(sig * scale, bak);
+		rate LNC_dirac{sig, bak};
+		rate LNV_dirac{sig * scale, bak};
 
-		rate LNC_major(sig * (1 + scale) / 2., bak);
-		rate LNV_major(sig * (1 + scale) / 2., bak);
+		rate LNC_major{sig * (1 + scale) / 2., bak};
+		rate LNV_major{sig * (1 + scale) / 2., bak};
 
 		auto dirac_belt = dirac.expand(CL, LNC_dirac, LNV_dirac);
 		auto major_belt = major.expand(CL, LNC_major, LNV_major);

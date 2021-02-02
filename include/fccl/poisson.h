@@ -16,24 +16,19 @@ namespace poisson {
 	// s is signal
 	// b is background
 	// function above has minimum value for n = s + b
-	template<typename S>
-	double llratio(S i, double s, double b) {
-		double n = static_cast<double>(i);
+	inline double llratio(double n, double s, double b) {
 		// correct also if any term is zero
 		return 2 * (s - std::max(n - b, 0.))
 		     - 2 * (n > 0 ? n * (std::log(s + b)
 				       - std::log(std::max(n, b))) : 0);
 	}
 
-	template<typename S>
-	double llratio(S i, const rate &r) {
-		return llratio(i, r.sig, r.bak);
+	inline double llratio(double n, const rate &r) {
+		return llratio(n, r.sig, r.bak);
 	}
 
-	template<typename S>
-	double poisson(S i, double s) {
-		if (i > 0) {
-			double n = static_cast<double>(i);
+	inline double poisson(double n, double s) {
+		if (n > 0) {
 			double p = std::exp(- s / n) * s;
 			long double ret = p / n;
 			for (--n; n > 0; --n) {
@@ -46,10 +41,8 @@ namespace poisson {
 		return std::exp(-s);
 	}
 
-	template<typename S>
-	double poisson(S i, const rate &r) {
-		double n = static_cast<double>(i);
-		return poisson(i, r.sig + r.bak);
+	inline double poisson(double n, const rate &r) {
+		return poisson(n, r.sig + r.bak);
 	}
 
 	/* poisson is exp(-s) * pow(s, n) / n!
@@ -62,11 +55,8 @@ namespace poisson {
 
 	// function computes a factorized term in the poissonian sum
 	// partial is basicall poisson(n, r) / poisson(n0, r)
-	template <typename S>
-	double partial(S i0, S i, double s) {
+	inline double partial(double n0, double n, double s) {
 		// n > n0 correct order
-		double n0 = static_cast<double>(i0);
-		double n = static_cast<double>(i);
 		long double ret = 1.;
 		for (double k = std::max(n, n0); k > std::min(n, n0); --k)
 			ret *= s / k;
@@ -74,11 +64,9 @@ namespace poisson {
 		return n >= n0 ? ret : 1./ret;
 	}
 
-	template <typename S>
-	double partial(S i0, S i, const rate &r) {
-		return partial(i0, i, r.sig + r.bak);
+	inline double partial(double n0, double n, const rate &r) {
+		return partial(n0, n, r.sig + r.bak);
 	}
-
 };
 
 #endif

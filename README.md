@@ -9,14 +9,15 @@ Thanks to metaprogramming, N nested vectors are created at compile time, where N
 ## Requirements
 
 * c++11 enabled compiler
-* cmake 3.5
 
 
 ## Compiling examples
 
 As this is a header only library, there is no need to compile any software.
 There are some examples in the `src` folder that illustrates how to use the library.
-To compile those, the typical `cmake` procedure must be followed
+To compile those, the typical `cmake` procedure could be followed.
+Minimum version required is cmake 3.5.
+
 ```
 mkdir build
 cd build/

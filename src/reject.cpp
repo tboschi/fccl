@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
 	belt<1> myb(bb);
 	while (myb.contains(bb)) {
 		sig += 0.001;
-		rate ex(sig, bak);	// expected rate
+		rate ex{sig, bak};	// expected rate
 
 		myb = reg.expand(CL, ex);
 
