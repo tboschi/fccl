@@ -6,17 +6,19 @@
 
 #include <ostream>
 
-struct rate {
-	double sig;
-	double bak;
+namespace fccl {
+	struct rate {
+		double sig;
+		double bak;
 
-	template<typename S, typename B>
-	rate(S s, B b = 0) : sig(s), bak(b) { };
+		template<typename S, typename B>
+			rate(S s, B b = 0) : sig(s), bak(b) { };
 
-	//rate(const rate &r) : sig(r.sig), bak(r.bak) { };
-};
+		//rate(const rate &r) : sig(r.sig), bak(r.bak) { };
+	};
+} /*fccl*/
 
-std::ostream & operator<<(std::ostream &os, const rate& rr) {
+inline std::ostream & operator<<(std::ostream &os, const fccl::rate& rr) {
 	return os << "{" << rr.sig << ", " << rr.bak << "}";
 }
 

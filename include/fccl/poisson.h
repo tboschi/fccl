@@ -11,7 +11,7 @@
 
 #include "fccl/rate.h"
 
-namespace poisson {
+namespace fccl { namespace poisson {
 	// n observed events
 	// s is signal
 	// b is background
@@ -48,7 +48,7 @@ namespace poisson {
 
 	template<typename S>
 	double poisson(S i, const rate &r) {
-		double n = static_cast<double>(i);
+		//double n = static_cast<double>(i);
 		return poisson(i, r.sig + r.bak);
 	}
 
@@ -79,6 +79,6 @@ namespace poisson {
 		return partial(i0, i, r.sig + r.bak);
 	}
 
-};
+} /*poisson*/ } /*fccl*/
 
 #endif

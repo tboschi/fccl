@@ -21,7 +21,8 @@ int main(int argc, char** argv) {
 		{
 			case 'C':
 				CL = strtod(optarg, NULL);
-				CL /= 100.0;
+				if (CL >= 1.)
+					CL /= 100.0;
 				break;
 			case 'h':
 				return 1;
@@ -34,22 +35,27 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	region<1> reg;
-
 	double bak = std::atof(argv[optind]);
-	double sig = sqrt(bak);
 
-	// background
-	point bb = {size_t(bak)};
-	belt<1> myb(bb);
+	// null hypothesis point, i.e. only observed background
+	fccl::point bb{size_t(bak)};
+
+	// expected rate of signal and background
+	// starting signal is at least sqrt(bkg)
+	fccl::rate ex(std::sqrt(bkg), bkg);
+
+	// object to calculate F&C CL region
+	fccl::region<1> reg;
+
+
+	// expand region and find CL belt
+	fccl::belt<1> myb = reg.expand(CL, ex);
+	// continue expanding 1D CL region until background leaves region
 	while (myb.contains(bb)) {
-		sig += 0.001;
-		rate ex(sig, bak);	// expected rate
+		// increment signal
+		ex.sig += 0.001;
 
 		myb = reg.expand(CL, ex);
-
-		// when background is not in belt anymore
-		// this loop will end
 	}
 
 	auto plist = myb.points();

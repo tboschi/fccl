@@ -8,9 +8,11 @@
 #include <deque>
 #include <ostream>
 
-using point = std::deque<size_t>;
+namespace fccl {
+	using point = std::deque<size_t>;
+} /*fccl*/
 
-std::ostream & operator<<(std::ostream &os, const point& pp) {
+inline std::ostream & operator<<(std::ostream &os, const fccl::point& pp) {
 	const auto separator = ", ";
 	const auto* del = "";
 	os << "<";
