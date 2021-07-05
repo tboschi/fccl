@@ -29,13 +29,11 @@ namespace fccl { namespace poisson {
 
 	inline double poisson(double n, double s) {
 		if (n > 0) {
-			double p = std::exp(- s / n) * s;
-			long double ret = p / n;
-			for (--n; n > 0; --n) {
-				ret *= p / n;
-			}
+			long double p = s / n;
+			for (--n; n > 0; --n)
+				p *= s / n;
 
-			return ret;
+			return std::exp(- (long double)s) * p;
 		}
 
 		return std::exp(-s);
