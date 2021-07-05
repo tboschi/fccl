@@ -67,7 +67,6 @@ namespace fccl { namespace poisson {
 	inline double partial(double n0, double n, const rate &r) {
 		return partial(n0, n, r.sig + r.bak);
 	}
-<<<<<<< HEAD
 
 } /*poisson*/ } /*fccl*/
 
